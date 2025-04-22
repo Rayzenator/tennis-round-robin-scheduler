@@ -98,6 +98,8 @@ def schedule_matches():
         st.session_state.schedule = []
     if 'round' not in st.session_state:
         st.session_state.round = 1
+    if 'recent_american_doubles' not in st.session_state:
+        st.session_state.recent_american_doubles = set()
 
     st.header("Schedule Matches")
     game_type = st.radio("Select Match Type", ["Doubles", "Singles"])
@@ -145,7 +147,12 @@ def schedule_matches():
             if game_type == "Singles":
                 if len(leftovers) == 1:
                     if leftover_option == "Play American Doubles" and len(used_players) >= 2:
-                        matches.append(("Rotate", leftovers + random.sample(list(used_players), 2)))
+                        candidates = [p for p in used_players if p not in st.session_state.recent_american_doubles]
+                        if len(candidates) < 2:
+                            candidates = list(used_players)
+                        picked = random.sample(candidates, 2)
+                        st.session_state.recent_american_doubles = set(picked + leftovers)
+                        matches.append(("Rotate", leftovers + picked))
                     else:
                         matches.append(("Rest", leftovers))
             else:
@@ -157,7 +164,12 @@ def schedule_matches():
                     if leftover_option == "Rest":
                         matches.append(("Rest", leftovers))
                     elif len(used_players) >= 3:
-                        matches.append(("Rotate", leftovers + random.sample(list(used_players), 3)))
+                        candidates = [p for p in used_players if p not in st.session_state.recent_american_doubles]
+                        if len(candidates) < 3:
+                            candidates = list(used_players)
+                        picked = random.sample(candidates, 3)
+                        st.session_state.recent_american_doubles = set(picked + leftovers)
+                        matches.append(("Rotate", leftovers + picked))
 
         st.session_state.schedule.append(matches)
         st.session_state.round = len(st.session_state.schedule)
